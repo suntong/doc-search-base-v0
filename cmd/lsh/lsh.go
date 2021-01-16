@@ -39,6 +39,7 @@ func main() {
 		log.Fatal("-i needs any path")
 	}
 
+	println("] Open")
 	idx, err := bleve.Open(idxPath)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		idx, err = createIndex(idxPath)
@@ -52,6 +53,7 @@ func main() {
 			log.Fatal(err)
 		}
 
+		println("] indexingFiles")
 		var types []string
 		for _, t := range strings.Split(typ, ",") {
 			types = append(types, strings.TrimSpace(t))
@@ -62,15 +64,16 @@ func main() {
 		}
 	}
 	if query != "" {
+		println("] Query")
 		q := bleve.NewQueryStringQuery(query)
-		s := bleve.NewSearchRequest(q)
+		s := bleve.NewSearchRequestOptions(q, 10, 0, true)
 		s.Fields = []string{"Path"}
 		r, err := idx.Search(s)
 		if err != nil {
 			log.Fatal(err)
 		}
 		for _, h := range r.Hits {
-			fmt.Println(h.Fields["Path"])
+			fmt.Printf("%#v\n", h)
 		}
 	}
 }
@@ -87,9 +90,9 @@ func expandHome(d string) (string, error) {
 }
 
 type Doc struct {
-	ID string
-	Path string
-	Name string
+	ID      string
+	Path    string
+	Name    string
 	Content string
 }
 
@@ -122,9 +125,9 @@ func indexingFiles(idx bleve.Index, dir string, types []string) error {
 		bkey := md5.Sum([]byte(path))
 		key := hex.EncodeToString(bkey[:])
 		d := Doc{
-			ID: key,
-			Path: path,
-			Name: info.Name(),
+			ID:      key,
+			Path:    path,
+			Name:    info.Name(),
 			Content: string(buf),
 		}
 		return idx.Index(key, d)
@@ -140,7 +143,7 @@ func isTarget(file string, exts []string) bool {
 	return false
 }
 
-func createIndex(idxPath string) (bleve.Index, error){
+func createIndex(idxPath string) (bleve.Index, error) {
 	m, err := buildMapping()
 	if err != nil {
 		log.Fatal(err)
