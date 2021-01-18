@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 	_ "github.com/leopku/bleve-gse-tokenizer"
 )
 
